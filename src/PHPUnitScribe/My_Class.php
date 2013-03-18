@@ -6,10 +6,16 @@ class My_Class {
 		echo 'constructing';
 	}
 	public function short_format($str) {
-		echo "short format $str\n";
+        $d = $this->unmockable($str);
+		echo "short format $d\n";
 	}
 
 	public function long_format($str) {
 		echo "long format $str\n";
 	}
+
+    private function unmockable($str) {
+        echo "this function is unmackable $str\n";
+        return 2;
+    }
 }

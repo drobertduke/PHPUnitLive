@@ -1,0 +1,50 @@
+Execution:
+- Load setup
+- Load any instrumented files listed in test
+- Read statement
+- Identify external calls (require/include, new, globals)
+- Find file(s) containing external code
+- If file is not in list of instrumented files,
+    - instrument it
+    - add it to the list
+    - write a test containing the list and all statements so far
+    - restart
+- Else, modify the call to use the instrumented file
+- Execute statement and prompt for interception of any external calls in it
+- Repeat from 'Read statement' until finished
+- Write test to file
+
+Instrumenting external calls:
+1) Break complex statements out
+if ($obj->method($GLOBALS['var']))
+becomes
+$phpunitscribe_var01 = $GLOBALS['var'];
+$phpunitscribe_var02 = $obj->method($phpunitscribe_var01);
+if ($phpunitscribe_var02)
+
+or
+if ($this->class_var = $GLOBALS['var'])
+becomes
+$pus_var01 = $GLOBALS['var'];
+if ($this->class_var = $pus_var01)
+
+2) Replace each external reference with a block like
+list($action, $value) = PHPUnitScribe_Interceptor::intercept( function() {
+    original_statement;
+});
+if ($action == PHPUnitScribe_Interceptor::$none) {}
+else if ($action == PHPUnitScribe_Interceptor::$into) {
+    namespaced_statement;
+}
+else if ($action == PHPUnitScribe_Interceptor::$over) {
+    PHPUnitScribe_Interceptor::disable();
+    namespaced_statement;
+    PHPUnintScribe_Interceptor::enable();
+}
+else if ($action == PHPUnitScribe_Interceptor::$replace) {
+    $assigned_var = $value;
+}
+
+Interception:
+If external reference is to an uninstrumented file, instument it, save it, add it to list and start over
+If external reference is not a variable assignment, do not allow replacement
