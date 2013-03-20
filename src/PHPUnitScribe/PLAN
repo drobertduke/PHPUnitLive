@@ -5,7 +5,6 @@ Execution:
 - Identify external calls (require/include, new, globals)
 - Find file(s) containing external code
 - If file is not in list of instrumented files,
-    - instrument it
     - add it to the list
     - write a test containing the list and all statements so far
     - restart
@@ -29,9 +28,7 @@ $pus_var01 = $GLOBALS['var'];
 if ($this->class_var = $pus_var01)
 
 2) Replace each external reference with a block like
-list($action, $value) = PHPUnitScribe_Interceptor::intercept( function() {
-    original_statement;
-});
+list($action, $value) = PHPUnitScribe_Interceptor::intercept( 'original_statement;');
 if ($action == PHPUnitScribe_Interceptor::$none) {}
 else if ($action == PHPUnitScribe_Interceptor::$into) {
     namespaced_statement;

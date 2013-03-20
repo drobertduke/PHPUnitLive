@@ -109,7 +109,6 @@ class NodeVisitor_REPL_MethodFinder extends PHPParser_NodeVisitorAbstract
 {
     private function generateInclude()
     {
-       new PHPParser_Node_
     }
 
     public function enterNode(PHPParser_Node $node)
