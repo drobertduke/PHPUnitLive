@@ -1,13 +1,29 @@
+Questions:
+we can't just add namespace{} around all the instrumented code,
+any absolute namespacing in the code will break that.  Have to modify each call
+
 REPL:
+We will build the test file one statement at a time.
+We need to identify each external reference and restart the test so the reference can be instrumented.
+We need to present a repl experience but execute the user's statements in the context of
+    a class that extends PHPUnit_Base_Test, so we write a shadow version of the test
+    file and add instrumentation. The instrumentation identifies external files and returns them.
+
 $previous_output = '""'
 while !exit(0):
     if $previous_exit is added_file
     $previous_output and $previous_exit are assigned by shelling out to the runtime with $previous_output:
-        parse input file
-        next line = $previous_output || read next line
-        parse it
-        write a shadow output file with the next line instrumented
-        write the original file with the next line added
+        load phpunit
+        foreach file in filelist:
+            if instrumented file is older or doesn't exist:
+                instrument and fix namespaces and save a copy
+            include file
+        parse test file
+        nextline = $previous_output || read next line
+        parse nextline
+        write a shadow output file in my namespace with the next line instrumented and
+            all external references namespaced.
+        write the original file with the next line added (or wait until the end?)
         load the shadow output file and execute the method:
             instrumentation includes:
                 parse statement
@@ -15,8 +31,8 @@ while !exit(0):
                     use reflectionclass to determine filename
                     if file isn't already instrumented:
                         add file(s) to filelist
-                modify the statement to use the instrumented namespace
-                write test to disk
+                return list of new files found
+        add files to filelist, add next line, write test
         exit with finished_statement code and pass the remaining statements as output
 
 
