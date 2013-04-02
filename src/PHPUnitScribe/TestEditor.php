@@ -5,9 +5,12 @@
 class PHPUnitScribe_TestEditor
 {
     protected $test_builder;
-    public function __construct($test_file, $test_function)
+    protected $carryover_statments;
+
+    public function __construct($test_file, $test_function, $carryover_statements)
     {
         $this->test_builder = new PHPUnitScribe_TestBuilder($test_file, $test_function);
+        $this->carryover_statements = $carryover_statements;
     }
     protected function setup_phpunit()
     {
@@ -31,12 +34,18 @@ class PHPUnitScribe_TestEditor
         return new PHPParser_Node_Expr_Exit();
     }
 
-    public function execute($should_fast_forward = false)
+    public function execute($should_fast_forward)
     {
+        // This function encloses the user's scope
+        // Protect against name collisions
         PHPUnitScribe_Interceptor::register_editor($this);
         $this->setup_phpunit();
         $this->load_test();
         $statement_container = $this->test_builder->get_statement_container();
+        $existing_statements = $statement_container->get_statements();
+        $printer = new PHPParser_PrettyPrinter_Default();
+        $existing_code = $printer->prettyPrint($existing_statements);
+        eval($existing_code);
         // If we're fast-forwarding, we run all the statements
         // previously recorded
         if ($should_fast_forward)
@@ -52,16 +61,12 @@ class PHPUnitScribe_TestEditor
         }
 
         PHPUnitScribe_Interceptor::set_interactive_mode(true);
-        $readline = null;
-        while ($readline != 'exit')
-        {
-            echo "Prompt!>";
-            $readline = trim(fgets(STDIN));
-            $parser = new PHPParser_Parser(new PHPParser_Lexer());
-            $statements = $parser->parse('<?php ' . $readline);
-            $statement_container = new PHPUnitScribe_Statements($statements);
-            $statement_container->execute();
-        }
+        echo "Prompt!>";
+        $readline = trim(fgets(STDIN));
+        $parser = new PHPParser_Parser(new PHPParser_Lexer());
+        $statements = $parser->parse('<?php ' . $readline);
+        $statement_container = new PHPUnitScribe_Statements($statements);
+        $statement_container->execute();
     }
 
     protected function prompt_for_existing_statement($statement)

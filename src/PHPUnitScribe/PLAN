@@ -1,3 +1,26 @@
+REPL:
+$previous_output = '""'
+while !exit(0):
+    if $previous_exit is added_file
+    $previous_output and $previous_exit are assigned by shelling out to the runtime with $previous_output:
+        parse input file
+        next line = $previous_output || read next line
+        parse it
+        write a shadow output file with the next line instrumented
+        write the original file with the next line added
+        load the shadow output file and execute the method:
+            instrumentation includes:
+                parse statement
+                foreach external reference:
+                    use reflectionclass to determine filename
+                    if file isn't already instrumented:
+                        add file(s) to filelist
+                modify the statement to use the instrumented namespace
+                write test to disk
+        exit with finished_statement code and pass the remaining statements as output
+
+
+
 Execution:
 - Load setup
 - Load any instrumented files listed in test

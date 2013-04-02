@@ -19,8 +19,44 @@ class PHPUnitScribe_TestBuilder
     {
         $this->test_file = $test_file;
         $this->test_function = $test_function;
-        echo "we should read in a file here if it exists\n";
-        $this->statement_container = new PHPUnitScribe_Statements(array());
+
+        $functions_in_file = $this->get_functions();
+        $statements = array();
+        if (array_key_exists($test_function, $functions_in_file))
+        {
+            $statements = $functions_in_file[$test_function];
+        }
+
+        $this->statement_container = new PHPUnitScribe_Statements($statements);
+    }
+
+    private function get_functions()
+    {
+        $contents = file_get_contents($this->test_file);
+        $functions = array();
+        $parser = new PHPParser_Parser(new PHPParser_Lexer());
+        $stmts = $parser->parse($contents);
+        foreach($stmts as $top_level_stmt)
+        {
+            if ($top_level_stmt instanceof PHPParser_Node_Stmt_Class)
+            {
+                foreach($top_level_stmt->stmts as $class_stmt)
+                {
+                    if ($class_stmt instanceof PHPParser_Node_Stmt_ClassMethod)
+                    {
+                        $function_name = $class_stmt->name;
+                        if (array_key_exists($function_name, $functions))
+                        {
+                            throw new Exception("Multiple methods with the same name " .
+                                " ($function_name) exist in the file {$this->test_file}");
+                        }
+                        $functions[$function_name] = $class_stmt->stmts;
+                    }
+                }
+
+            }
+        }
+        return $functions;
     }
 
     public function add_class($class_name)
