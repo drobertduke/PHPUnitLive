@@ -7,30 +7,35 @@
  */
 class PHPUnitScribe_TestBuilder
 {
-    protected $name;
-    protected $file_names = array();
-    protected $class_names = array();
+    protected $test_file;
+    protected $test_function;
+    protected $instrumented_file_names = array();
+    protected $instrumented_class_names = array();
     protected $mocking_choices = array();
-    protected $statements = array();
+    /** @var PHPUnitScribe_Statements */
+    protected $statement_container;
 
-    public function __construct($name)
+    public function __construct($test_file, $test_function)
     {
-        $this->name = $name;
+        $this->test_file = $test_file;
+        $this->test_function = $test_function;
+        echo "we should read in a file here if it exists\n";
+        $this->statement_container = new PHPUnitScribe_Statements(array());
     }
 
     public function add_class($class_name)
     {
-        if (!in_array($class_name, $this->class_names))
+        if (!in_array($class_name, $this->instrumented_class_names))
         {
-            $this->class_names[] = $class_name;
+            $this->instrumented_class_names[] = $class_name;
         }
     }
 
     public function add_file($file_name)
     {
-        if (!in_array($file_name, $this->file_names))
+        if (!in_array($file_name, $this->instrumented_file_names))
         {
-            $this->file_names[] = $file_name;
+            $this->instrumented_file_names[] = $file_name;
         }
     }
 
@@ -41,17 +46,17 @@ class PHPUnitScribe_TestBuilder
 
     public function add_statement($statement)
     {
-        $this->statements[] = $statement;
+        $this->statement_container->add_statement($statement);
     }
 
     public function get_file_names()
     {
-        return $this->file_names;
+        return $this->instrumented_file_names;
     }
 
     public function get_class_names()
     {
-        return $this->class_names;
+        return $this->instrumented_class_names;
     }
 
     public function get_mocking_choices()
@@ -59,8 +64,8 @@ class PHPUnitScribe_TestBuilder
         return $this->mocking_choices;
     }
 
-    public function get_statements()
+    public function get_statement_container()
     {
-        return $this->statements;
+        return $this->statement_container;
     }
 }

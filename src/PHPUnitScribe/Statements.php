@@ -26,7 +26,20 @@ class PHPUnitScribe_Statements
     public function execute()
     {
         echo "executing statements\n";
-        PHPUnitParser_PrettyPrinter
+        var_dump($this->statements);
+        $printer = new PHPParser_PrettyPrinter_Default();
+        $code = $printer->prettyPrint($this->statements);
+        eval($code);
+    }
+
+    public function add_statement($statement)
+    {
+        $this->statements[] = $statement;
+    }
+
+    public function get_statements()
+    {
+        return $this->statements;
     }
 
 }

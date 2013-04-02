@@ -51,12 +51,15 @@ class PHPUnitScribe_TestEditor
             }
         }
 
-        $readline = null;
         PHPUnitScribe_Interceptor::set_interactive_mode(true);
-        while ($readline != 'exit;')
+        $readline = null;
+        while ($readline != 'exit')
         {
+            echo "Prompt!>";
             $readline = trim(fgets(STDIN));
-            $statement_container = new PHPUnitScribe_Statements($readline);
+            $parser = new PHPParser_Parser(new PHPParser_Lexer());
+            $statements = $parser->parse('<?php ' . $readline);
+            $statement_container = new PHPUnitScribe_Statements($statements);
             $statement_container->execute();
         }
     }

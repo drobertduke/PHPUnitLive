@@ -10,8 +10,8 @@ Execution:
     - restart
 - Else, modify the call to use the instrumented file
 - Execute statement and prompt for interception of any external calls in it
-- Repeat from 'Read statement' until finished
 - Write test to file
+- Restart with fast-forward
 
 Instrumenting external calls:
 1) Break complex statements out
