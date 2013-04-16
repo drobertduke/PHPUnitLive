@@ -30,7 +30,22 @@ class PHPUnitScribe_TestBuilder
         $this->statement_container = new PHPUnitScribe_Statements($statements);
     }
 
-    private function get_functions()
+    public function get_code()
+    {
+        return $this->statement_container->get_code();
+    }
+
+    public function get_statements()
+    {
+        return $this->statement_container->get_statements();
+    }
+
+    public function get_function_name()
+    {
+        return $this->test_function_name();
+    }
+
+    protected function get_functions()
     {
         $contents = file_get_contents($this->test_file);
         $functions = array();
@@ -59,7 +74,7 @@ class PHPUnitScribe_TestBuilder
         return $functions;
     }
 
-    public function add_class($class_name)
+    public function include_class($class_name)
     {
         if (!in_array($class_name, $this->instrumented_class_names))
         {
@@ -67,7 +82,7 @@ class PHPUnitScribe_TestBuilder
         }
     }
 
-    public function add_file($file_name)
+    public function include_file($file_name)
     {
         if (!in_array($file_name, $this->instrumented_file_names))
         {

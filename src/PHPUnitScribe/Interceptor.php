@@ -116,5 +116,13 @@ class PHPUnitScribe_Interceptor
 
     }
 
+    public static function is_external_reference(PHPParser_Node $node)
+    {
+        if ($node instanceof PHPParser_Node_Expr_New)
+        {
+            return true;
+        }
+        return false;
+    }
 
 }

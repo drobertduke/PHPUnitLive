@@ -22,14 +22,15 @@ class PHPUnitScribe_NodeVisitor_Instrumentor extends PHPParser_NodeVisitorAbstra
         $printer = new PHPParser_PrettyPrinter_Default();
         $printed_statement = $printer->prettyPrint(array($expression));
         $parser = new PHPParser_Parser(new PHPParser_Lexer());
-        $reflection_class = new ReflectionClass('Interceptor_Template');
+        $reflection_class = new ReflectionClass('PHPUnitScribe_Template_Interceptor');
         $template_code = file_get_contents($reflection_class->getFileName());
         $interceptor_template = new PHPParser_Template($parser, $template_code);
         $properties = array(
             array('statement' => $printed_statement, 'var' => $assigned_var_name)
         );
-        $interceptor_function = $interceptor_template->getStmts($properties)[0];
-        $interceptor_structure = $interceptor_function->stmts;
+        $template_stmts = $interceptor_template->getStmts($properties);
+        $interceptor_function = $template_stmts[0];
+        $interceptor_structure = $interceptor_function->stmts[0];
         return $interceptor_structure;
     }
 

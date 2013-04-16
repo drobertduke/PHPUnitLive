@@ -11,28 +11,30 @@ We need to present a repl experience but execute the user's statements in the co
 
 $previous_output = '""'
 while !exit(0):
-    if $previous_exit is added_file
     $previous_output and $previous_exit are assigned by shelling out to the runtime with $previous_output:
         load phpunit
+        parse test file
         foreach file in filelist:
             if instrumented file is older or doesn't exist:
-                instrument and fix namespaces and save a copy
-            include file
-        parse test file
+                instrument with full chooser and fix namespaces and save a shadow
+            include shadow file
         nextline = $previous_output || read next line
         parse nextline
-        write a shadow output file in my namespace with the next line instrumented and
-            all external references namespaced.
+        write a shadow test file in my namespace with the next line instrumented
+            with the file-finder and all external references instrumented with the
+            in/out chooser and namespaces fixed.
         write the original file with the next line added (or wait until the end?)
-        load the shadow output file and execute the method:
-            instrumentation includes:
+        load the shadow test file
+        run setup in the shadow test file
+        run the test method in the shadow test file:
+            file-finder instrumentation:
                 parse statement
                 foreach external reference:
                     use reflectionclass to determine filename
                     if file isn't already instrumented:
                         add file(s) to filelist
                 return list of new files found
-        add files to filelist, add next line, write test
+        add files to filelist, add next line, write original test
         exit with finished_statement code and pass the remaining statements as output
 
 

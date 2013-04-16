@@ -4,21 +4,46 @@
  */
 class PHPUnitScribe_TestEditor
 {
+    /** @var \PHPUnitScribe_TestBuilder */
     protected $test_builder;
-    protected $carryover_statments;
+    /** @var PHPParser_Parser */
+    protected $parser;
+    /** @var \PHPParser_PrettyPrinter_Default */
+    protected $printer;
+    protected $statements;
 
-    public function __construct($test_file, $test_function, $carryover_statements)
+    public function __construct($test_file, $test_function)
     {
-        $this->test_builder = new PHPUnitScribe_TestBuilder($test_file, $test_function);
-        $this->carryover_statements = $carryover_statements;
+        $this->test_file = new PHPUnitScribe_TestFile($test_file, $test_function);
+        $this->parser = new PHPParser_Parser(new PHPParser_Lexer());
+        $this->printer = new PHPParser_PrettyPrinter_Default();
     }
-    protected function setup_phpunit()
+
+    protected function run_test_setup()
     {
-        echo "Setting up phpunit\n";
+        echo "Running the shadow test's setup\n";
+    }
+
+    protected function generate_shadow()
+    {
+        $stmts = $this->get_test_statements();
+        $this->parser->parse()
+
+    }
+
+    protected function get_test_function_name()
+    {
+        return $this->test_builder->get_function_name();
+    }
+
+    protected function get_test_statements()
+    {
+        return $this->test_builder->get_statements();
     }
 
     protected function load_test()
     {
+        $this->shadow_test = $this->generate_shadow();
         $file_dependencies = $this->test_builder->get_file_names();
         $class_dependencies = $this->test_builder->get_class_names();
         PHPUnitScribe_Interceptor::instrument_files_once($file_dependencies);
@@ -39,7 +64,6 @@ class PHPUnitScribe_TestEditor
         // This function encloses the user's scope
         // Protect against name collisions
         PHPUnitScribe_Interceptor::register_editor($this);
-        $this->setup_phpunit();
         $this->load_test();
         $statement_container = $this->test_builder->get_statement_container();
         $existing_statements = $statement_container->get_statements();
