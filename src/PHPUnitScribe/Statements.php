@@ -13,10 +13,12 @@ class PHPUnitScribe_Statements
     public function get_instrumented_statements()
     {
         echo "instrumenting statements\n";
+        PHPUnitScribe_Interceptor::reset_decomposition_layer();
         $traverser = new PHPParser_NodeTraverser();
-        $traverser->addVisitor(new PHPParser_NodeVisitor_NameResolver);
-        $traverser->addVisitor(new PHPUnitScribe_NodeVisitor_ShadowNamespacer);
-        $traverser->addVisitor(new PHPUnitScribe_NodeVisitor_Instrumentor);
+        //$traverser->addVisitor(new PHPParser_NodeVisitor_NameResolver);
+        $traverser->addVisitor(new PHPUnitScribe_NodeVisitor_Decomposer);
+        //$traverser->addVisitor(new PHPUnitScribe_NodeVisitor_ShadowNamespacer);
+        //$traverser->addVisitor(new PHPUnitScribe_NodeVisitor_Instrumentor);
         $modified_statements = $traverser->traverse($this->statements);
         return new PHPUnitScribe_Statements($modified_statements);
     }

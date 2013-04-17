@@ -43,7 +43,7 @@ class PHPUnitScribe_UserEnvironment
     {
         $this->setup_phpunit();
         $this->get_test_method()->instrument_executed_files();
-
+        PHPUnitScribe_Interceptor::include_shadow_files();
     }
 
     protected function setup_phpunit()

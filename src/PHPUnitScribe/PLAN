@@ -1,3 +1,42 @@
+Instrumentation:
+first break out any compound statements if they include external refs
+potential nodes for compound statements:
+    if conditions
+    function/constructor args
+    closure args
+    array declarations
+    array fetches
+    switch and case conditions
+    while condition
+    do/while condition
+    return
+
+Any compound statement has to be bubbled up until we get to a node which is:
+    in an array of nodes and
+    not inside a potential compound statement
+
+When you find a potential compound statment:
+    make a new traverser and new node visitor
+    set nodevisitor's 'looking for compound statement' flag
+    traverse condition/arguments
+    if external reference is found:
+        create new var to assign it to,
+        build statement, add it to queue,
+        replace statement with new var
+    on exiting compound statment, write references from queue
+
+external refs:
+    FuncCall
+    Exit
+    Include
+    MethodCall
+    New
+    PropertyFetch
+    ShellExec
+    StaticCall
+    StaticPropertyFetch
+
+if assignment ->
 Questions:
 we can't just add namespace{} around all the instrumented code,
 any absolute namespacing in the code will break that.  Have to modify each call
