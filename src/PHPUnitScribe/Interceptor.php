@@ -249,7 +249,7 @@ class PHPUnitScribe_Interceptor
         }
         elseif (self::is_return($node))
         {
-            $inner_nodes = $node->expr;
+            $inner_nodes = array($node->expr);
         }
         elseif (self::is_array_node($node))
         {

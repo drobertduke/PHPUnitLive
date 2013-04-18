@@ -28,7 +28,6 @@ class PHPUnitScribe_NodeVisitor_Decomposer extends PHPParser_NodeVisitorAbstract
 
         if (PHPUnitScribe_Interceptor::is_potential_compound_statement($node))
         {
-            //PHPUnitScribe_Interceptor::decrease_decomposition_layer();
             $inner_candidate_nodes = PHPUnitScribe_Interceptor::get_potential_compound_nodes($node);
             if ($inner_candidate_nodes)
             {
@@ -45,8 +44,11 @@ class PHPUnitScribe_NodeVisitor_Decomposer extends PHPParser_NodeVisitorAbstract
                     {
                         $stmts[] = $decomposition;
                     }
-                    $stmts[] = $node;
-                    return $stmts;
+                    if (count($stmts) > 0)
+                    {
+                        $stmts[] = $node;
+                        return $stmts;
+                    }
                 }
             }
         }

@@ -13,8 +13,8 @@ class Decomposer_Test extends PHPUnit_Framework_TestCase
 
         $printer = new PHPParser_PrettyPrinter_Default();
         //var_dump($instrumented_statements->get_statements());
-        $statements = $instrumented_statements->get_code();
-        echo $statements;
+        $code = $instrumented_statements->get_code();
+        echo $code;
         //var_dump($printer->prettyPrint(array($statements)));
     }
 }
