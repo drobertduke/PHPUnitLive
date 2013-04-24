@@ -18,40 +18,7 @@ class PHPUnitScribe_Interceptor
     /** @var PHPUnitScribe_MockingChoice[] */
     static protected $mocking_choices = array();
     static protected $enabled = true;
-    static protected $decomposition_layer = 0;
-    /** @var PHPParser_Node[] */
-    static protected $decomposition_queue = array();
     static protected $var_num = 0;
-
-    public static function enqueue_decomposition(PHPParser_Node $node)
-    {
-        self::$decomposition_queue[] = $node;
-    }
-
-    public static function dequeue_decomposition()
-    {
-        return array_shift(self::$decomposition_queue);
-    }
-
-    public static function reset_decomposition_layer()
-    {
-        self::$decomposition_layer = 0;
-    }
-
-    public static function increase_decomposition_layer()
-    {
-        self::$decomposition_layer++;
-    }
-
-    public static function decrease_decomposition_layer()
-    {
-        self::$decomposition_layer--;
-    }
-
-    public static function get_decomposition_layer()
-    {
-        return self::$decomposition_layer;
-    }
 
     public static function include_shadow_files()
     {
@@ -246,6 +213,7 @@ class PHPUnitScribe_Interceptor
         elseif (self::is_argumented($node))
         {
             $inner_nodes = $node->args;
+            $inner_nodes[] = $node->var;
         }
         elseif (self::is_return($node))
         {

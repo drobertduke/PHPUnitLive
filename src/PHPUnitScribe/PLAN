@@ -1,29 +1,17 @@
 Instrumentation:
 first break out any compound statements if they include external refs
-potential nodes for compound statements:
-    if conditions
-    function/constructor args
-    closure args
-    array declarations
-    array fetches
-    switch and case conditions
-    while condition
-    do/while condition
-    return
-
-Any compound statement has to be bubbled up until we get to a node which is:
-    in an array of nodes and
-    not inside a potential compound statement
-
-When you find a potential compound statment:
-    make a new traverser and new node visitor
-    set nodevisitor's 'looking for compound statement' flag
-    traverse condition/arguments
-    if external reference is found:
-        create new var to assign it to,
-        build statement, add it to queue,
-        replace statement with new var
-    on exiting compound statment, write references from queue
+    maintain a stack to know how nested we are
+    if we find external reference nodes but we're nested:
+        create new var
+        build decomposed statement, add it to queue
+        return new var
+    if we pop the last stack member and we have decomposed statements queued, return them
+    if we process a node which can contain a context where statements can be decomposed,
+        start a new traverser on the decomposable statements
+        includes:
+            functions
+            methods
+            closures
 
 external refs:
     FuncCall
