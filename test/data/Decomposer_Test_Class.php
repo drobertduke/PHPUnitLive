@@ -22,7 +22,12 @@ class Decomposer_Test_Class
             $test_class->nothing($this->return_a());
             return $arg_a;
         });
+        $g = $this->get_obj();
         $r = 'qwe';
+        if ($q = $this->funcName())
+        {
+            $k = $this->return_a();
+        }
         $this->nothing($r);
     }
 
