@@ -6,7 +6,7 @@ class PHPUnitScribe_NodeVisitor_Decomposer extends PHPParser_NodeVisitorAbstract
 
     protected $context_stack = array();
 
-    protected $decomposing_queue = array();
+    protected $decomposition_queue = array();
 
     protected $inner_stmts_decomposed = array();
 
@@ -15,30 +15,33 @@ class PHPUnitScribe_NodeVisitor_Decomposer extends PHPParser_NodeVisitorAbstract
         return array_shift($this->context_stack);
     }
 
-    protected function peek_context()
-    {
-        return $this->context_stack[0];
-    }
-
     protected function push_context($context)
     {
         array_unshift($this->context_stack, $context);
     }
 
-    protected function get_statement_array(PHPParser_Node $node)
+    protected function get_inner_stmts(PHPParser_Node $node)
     {
-        if ($this->contains_statement_array(get_class($node)))
+        if ($this->contains_inner_stmts(get_class($node)))
         {
             return $node->stmts;
         }
         return null;
     }
 
+    protected function set_inner_stmts(PHPParser_Node &$node, array $stmts)
+    {
+        if ($this->contains_inner_stmts(get_class($node)))
+        {
+            $node->stmts = $stmts;
+        }
+    }
+
     protected function is_decomposition_enabled()
     {
         foreach ($this->context_stack as $context)
         {
-            if ($this->contains_statement_array($context))
+            if ($this->contains_inner_stmts($context))
             {
                 return false;
             }
@@ -46,7 +49,7 @@ class PHPUnitScribe_NodeVisitor_Decomposer extends PHPParser_NodeVisitorAbstract
         return true;
     }
 
-    protected function contains_statement_array($node_name)
+    protected function contains_inner_stmts($node_name)
     {
         return $node_name === 'PHPParser_Node_Stmt_Function' ||
             $node_name === 'PHPParser_Node_Stmt_ClassMethod' ||
@@ -68,12 +71,13 @@ class PHPUnitScribe_NodeVisitor_Decomposer extends PHPParser_NodeVisitorAbstract
             $node_name === 'PHPParser_Node_Stmt_While';
     }
 
-    protected function in_nested_context()
+    protected function in_decomposable_context()
     {
         if (count($this->context_stack) === 0)
         {
             return false;
         }
+        // Don't decompose simple assignments
         if (count($this->context_stack) == 1 &&
             $this->context_stack[0] === 'PHPParser_Node_Expr_Assign')
         {
@@ -86,42 +90,49 @@ class PHPUnitScribe_NodeVisitor_Decomposer extends PHPParser_NodeVisitorAbstract
     public function enterNode(PHPParser_Node $node)
     {
         $this->push_context(get_class($node));
-        if (is_array($inner_stmts = $this->get_statement_array($node)))
+        $inner_stmts = $this->get_inner_stmts($node);
+        if (is_array($inner_stmts))
         {
+            // Start a sub traversal of the node's inner stmts
+            // Necessary for distinguishing the context of the inner stmts
             $inner_traverser = new PHPParser_NodeTraverser();
             $inner_decomposer = new PHPUnitScribe_NodeVisitor_Decomposer();
             $inner_traverser->addVisitor($inner_decomposer);
-            //$node->stmts = $inner_traverser->traverse($inner_stmts);
+            // Save the inner stmts and zero them out so we don't do extra work
             $this->inner_stmts_decomposed = $inner_traverser->traverse($inner_stmts);
-            // Zero out the inner section so we don't do extra work
-            $node->stmts = array();
+            $this->set_inner_stmts($node, array());
         }
     }
 
     public function leaveNode(PHPParser_Node $node)
     {
         $this->pop_context();
-        $var = null;
+        // If this node has inner stmts and a sub traversal has processed
+        // them, insert the processed stmts
         if (count($this->inner_stmts_decomposed) > 0 &&
-            is_array($inner_stmts = $this->get_statement_array($node)))
+            $this->contains_inner_stmts(get_class($node)))
         {
-            $node->stmts = $this->inner_stmts_decomposed;
+            $this->set_inner_stmts($node, $this->inner_stmts_decomposed);
             $this->inner_stmts_decomposed = array();
         }
+        // If this node is mockable and we are in a nested context that requires
+        // decomposition, perform the substitution
         if (PHPUnitScribe_Interceptor::is_mockable_reference($node) &&
-            $this->in_nested_context())
+            $this->in_decomposable_context())
         {
             $var_name = PHPUnitScribe_Interceptor::get_new_var_name();
             $var = new PHPParser_Node_Expr_Variable($var_name);
             $assigner = new PHPParser_Node_Expr_Assign($var, $node);
-            $this->decomposing_queue[] = $assigner;
+            $this->decomposition_queue[] = $assigner;
             return $var;
         }
-        else if (count($this->context_stack) === 0 && count($this->decomposing_queue) > 0)
+        // Otherwise, if we are in a context where new statements can be added and
+        // we have temp vars to assign, add the assignments to the result
+        else if (count($this->context_stack) === 0 && count($this->decomposition_queue) > 0)
         {
-            $stmts_to_return = $this->decomposing_queue;
+            $stmts_to_return = $this->decomposition_queue;
             $stmts_to_return[] = $node;
-            $this->decomposing_queue = array();
+            $this->decomposition_queue = array();
             return $stmts_to_return;
         }
         return $node;
