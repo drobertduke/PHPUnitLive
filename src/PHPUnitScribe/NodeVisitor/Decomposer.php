@@ -96,8 +96,7 @@ class PHPUnitScribe_NodeVisitor_Decomposer extends PHPParser_NodeVisitorAbstract
             // Start a sub traversal of the node's inner stmts
             // Necessary for distinguishing the context of the inner stmts
             $inner_traverser = new PHPParser_NodeTraverser();
-            $inner_decomposer = new PHPUnitScribe_NodeVisitor_Decomposer();
-            $inner_traverser->addVisitor($inner_decomposer);
+            $inner_traverser->addVisitor(new PHPUnitScribe_NodeVisitor_Decomposer);
             // Save the inner stmts and zero them out so we don't do extra work
             $this->inner_stmts_decomposed = $inner_traverser->traverse($inner_stmts);
             $this->set_inner_stmts($node, array());

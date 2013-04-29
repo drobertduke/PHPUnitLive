@@ -5,22 +5,29 @@
 class PHPUnitScribe_Template_Interceptor
 {
 
-    public function interceptor()
+    public function assignment_interceptor()
     {
-        if (true)
-        {
-            list($choice, $replacement) = PHPUnitScribe_Interceptor::intercept('__statement__');
-            if ($choice === PHPUnitScribe_MockingChoice_Into) {
-                __statement__;
-            } else if ($choice === PHPUnitScribe_MockingChoice_Over) {
-                PHPUnitScribe_Interceptor::disable();
-                __statement__;
-                PHPUnitScribe_Interceptor::enable();
-            } else if ($choice === PHPUnitScribe_MockingChoice_Replace) {
-                $__var__ = $replacement;
-            }
-
+        list($choice, $replacement) = PHPUnitScribe_Interceptor::intercept('__statement_escaped__');
+        if ($choice === PHPUnitScribe_MockingChoice_Into) {
+            __statement__;
+        } elseif ($choice === PHPUnitScribe_MockingChoice_Over) {
+            PHPUnitScribe_Interceptor::disable();
+            __statement__;
+            PHPUnitScribe_Interceptor::enable();
+        } elseif ($choice === PHPUnitScribe_MockingChoice_Replace) {
+            $__var__ = $replacement;
         }
     }
 
+    public function non_assignment_interceptor()
+    {
+        list($choice, $replacement) = PHPUnitScribe_Interceptor::intercept('__statement_escaped__');
+        if ($choice === PHPUnitScribe_MockingChoice_Into) {
+            __statement__;
+        } elseif ($choice === PHPUnitScribe_MockingChoice_Over) {
+            PHPUnitScribe_Interceptor::disable();
+            __statement__;
+            PHPUnitScribe_Interceptor::enable();
+        }
+    }
 }

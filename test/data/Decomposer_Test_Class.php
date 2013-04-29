@@ -10,6 +10,11 @@ class Decomposer_Test_Class
             echo $thing;
         }
     }
+    protected function return_two_things()
+    {
+        return array(0, 1);
+
+    }
     public function do_a_thing()
     {
         $this->protected_thing($this->generate_things());
@@ -29,6 +34,7 @@ class Decomposer_Test_Class
             $k = $this->return_a();
         }
         $this->nothing($r);
+        list($a, $b) = $this->return_two_things();
     }
 
     protected function return_a()
