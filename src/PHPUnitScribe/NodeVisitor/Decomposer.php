@@ -22,7 +22,7 @@ class PHPUnitScribe_NodeVisitor_Decomposer extends PHPParser_NodeVisitorAbstract
 
     protected function get_inner_stmts(PHPParser_Node $node)
     {
-        if ($this->contains_inner_stmts(get_class($node)))
+        if (PHPUnitScribe_Interceptor::node_contains_inner_stmts(get_class($node)))
         {
             return $node->stmts;
         }
@@ -31,7 +31,7 @@ class PHPUnitScribe_NodeVisitor_Decomposer extends PHPParser_NodeVisitorAbstract
 
     protected function set_inner_stmts(PHPParser_Node &$node, array $stmts)
     {
-        if ($this->contains_inner_stmts(get_class($node)))
+        if (PHPUnitScribe_Interceptor::node_contains_inner_stmts(get_class($node)))
         {
             $node->stmts = $stmts;
         }
@@ -41,34 +41,12 @@ class PHPUnitScribe_NodeVisitor_Decomposer extends PHPParser_NodeVisitorAbstract
     {
         foreach ($this->context_stack as $context)
         {
-            if ($this->contains_inner_stmts($context))
+            if (PHPUnitScribe_Interceptor::node_contains_inner_stmts($context))
             {
                 return false;
             }
         }
         return true;
-    }
-
-    protected function contains_inner_stmts($node_name)
-    {
-        return $node_name === 'PHPParser_Node_Stmt_Function' ||
-            $node_name === 'PHPParser_Node_Stmt_ClassMethod' ||
-            $node_name === 'PHPParser_Node_Expr_Closure' ||
-            $node_name === 'PHPParser_Node_Stmt_If' ||
-            $node_name === 'PHPParser_Node_Stmt_Case' ||
-            $node_name === 'PHPParser_Node_Stmt_Catch' ||
-            $node_name === 'PHPParser_Node_Stmt_Class' ||
-            $node_name === 'PHPParser_Node_Stmt_Declare' ||
-            $node_name === 'PHPParser_Node_Stmt_Do' ||
-            $node_name === 'PHPParser_Node_Stmt_Else' ||
-            $node_name === 'PHPParser_Node_Stmt_Elseif' ||
-            $node_name === 'PHPParser_Node_Stmt_For' ||
-            $node_name === 'PHPParser_Node_Stmt_Foreach' ||
-            $node_name === 'PHPParser_Node_Stmt_Interface' ||
-            $node_name === 'PHPParser_Node_Stmt_Namespace' ||
-            $node_name === 'PHPParser_Node_Stmt_Trait' ||
-            $node_name === 'PHPParser_Node_Stmt_TryCatch' ||
-            $node_name === 'PHPParser_Node_Stmt_While';
     }
 
     protected function in_decomposable_context()
@@ -109,7 +87,7 @@ class PHPUnitScribe_NodeVisitor_Decomposer extends PHPParser_NodeVisitorAbstract
         // If this node has inner stmts and a sub traversal has processed
         // them, insert the processed stmts
         if (count($this->inner_stmts_decomposed) > 0 &&
-            $this->contains_inner_stmts(get_class($node)))
+            PHPUnitScribe_Interceptor::node_contains_inner_stmts(get_class($node)))
         {
             $this->set_inner_stmts($node, $this->inner_stmts_decomposed);
             $this->inner_stmts_decomposed = array();

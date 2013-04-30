@@ -140,6 +140,28 @@ class PHPUnitScribe_Interceptor
             $node instanceof PHPParser_Node_Expr_ShellExec;
     }
 
+    public static function node_contains_inner_stmts($node_name)
+    {
+        return $node_name === 'PHPParser_Node_Stmt_Function' ||
+            $node_name === 'PHPParser_Node_Stmt_ClassMethod' ||
+            $node_name === 'PHPParser_Node_Expr_Closure' ||
+            $node_name === 'PHPParser_Node_Stmt_If' ||
+            $node_name === 'PHPParser_Node_Stmt_Case' ||
+            $node_name === 'PHPParser_Node_Stmt_Catch' ||
+            $node_name === 'PHPParser_Node_Stmt_Class' ||
+            $node_name === 'PHPParser_Node_Stmt_Declare' ||
+            $node_name === 'PHPParser_Node_Stmt_Do' ||
+            $node_name === 'PHPParser_Node_Stmt_Else' ||
+            $node_name === 'PHPParser_Node_Stmt_Elseif' ||
+            $node_name === 'PHPParser_Node_Stmt_For' ||
+            $node_name === 'PHPParser_Node_Stmt_Foreach' ||
+            $node_name === 'PHPParser_Node_Stmt_Interface' ||
+            $node_name === 'PHPParser_Node_Stmt_Namespace' ||
+            $node_name === 'PHPParser_Node_Stmt_Trait' ||
+            $node_name === 'PHPParser_Node_Stmt_TryCatch' ||
+            $node_name === 'PHPParser_Node_Stmt_While';
+    }
+
     public static function is_external_reference(PHPParser_Node $node)
     {
         return
