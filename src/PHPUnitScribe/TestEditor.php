@@ -27,8 +27,8 @@ class PHPUnitScribe_TestEditor
     protected function generate_shadow()
     {
         $stmts = $this->get_test_statements();
-        $this->parser->parse()
-
+        // Not sure where I left off here
+        //$this->parser->parse()
     }
 
     protected function get_test_function_name()
@@ -124,31 +124,44 @@ class PHPUnitScribe_TestEditor
         }
     }
 
-    public function prompt_for_mock($statement)
+    public function prompt_for_mock($printed_statement, $allow_assignment)
     {
         $printer = new PHPParser_PrettyPrinter_Default();
-        $printed = $printer->prettyPrint(array($statement));
-        echo "prompting to mock $printed\n";
+        echo "prompting\n";
+        echo "prompting to mock $printed_statement\n";
         echo "(R)un with no mocking\n";
-        echo "(M)ock this statement to return a value\n";
+        if ($allow_assignment)
+        {
+            echo "(M)ock this statement to return a value\n";
+        }
         echo "(I)nteractively step into this statement\n";
         echo "Return from function (p)rematurely\n";
-        $cmd = trim(fgets(STDIN));
+        $cmd = readline('MAKE YOUR CHOSE> ');
         if ($cmd === 'r')
         {
-            return PHPUnitScribe_MockingChoice_Over;
+            return array(PHPUnitScribe_MockingChoice_Over, null);
         }
-        else if ($cmd === 'm')
+        else if ($allow_assignment && $cmd === 'm')
         {
-            return PHPUnitScribe_MockingChoice_Replace;
+            $replacement_text_raw = readline("Replace with:");
+            $replacement_text = "return $replacement_text_raw";
+            if (substr($replacement_text, -1) != ';')
+            {
+                $replacement_text .= ';';
+            }
+            $replacement = eval($replacement_text);
+            echo "dumping replacement\n";
+            var_dump($replacement);
+            return array(PHPUnitScribe_MockingChoice_Replace, $replacement);
         }
         else if ($cmd === 'i')
         {
-            return PHPUnitScribe_MockingChoice_Into;
+            return array(PHPUnitScribe_MockingChoice_Into, null);
         }
         else if ($cmd === 'p')
         {
-            return PHPUnitScribe_MockingChoice_PrematureReturn;
+            $return_value = readline("Return value:");
+            return array(PHPUnitScribe_MockingChoice_PrematureReturn, $return_value);
         }
     }
 

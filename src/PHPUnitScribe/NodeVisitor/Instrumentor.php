@@ -47,15 +47,19 @@ class PHPUnitScribe_NodeVisitor_Instrumentor extends PHPParser_NodeVisitorAbstra
     protected function get_interception_functions($node)
     {
         $printer = new PHPParser_PrettyPrinter_Default();
+        $assigned_var_printed = 'unused_var_placeholder';
+        $return_printed = 'return null;';
         if ($node instanceof PHPParser_Node_Expr_Assign)
         {
-            $assigned_var = $node->var;
-            $assigned_var_printed = $printer->prettyPrint(array($assigned_var));
-            $assigned_var_printed = substr($assigned_var_printed, 1, -1);
+            $replacement = new PHPParser_Node_Expr_Variable('PHPUnitScribe_replacement');
+            $new_assignment = new PHPParser_Node_Expr_Assign($node->var, $replacement);
+            $assigned_var_printed = $printer->prettyPrint(array($new_assignment));
         }
-        else
+        elseif ($node instanceof PHPParser_Node_Stmt_Return)
         {
-            $assigned_var_printed = 'unused_var_placeholder';
+            $replacement = new PHPParser_Node_Expr_Variable('PHPUnitScribe_replacement');
+            $return_stmt = new PHPParser_Node_Stmt_Return($replacement);
+            $return_printed = $printer->prettyPrint(array($return_stmt));
         }
         $printed_statement = $printer->prettyPrint(array($node));
         $printed_statement_escaped = addslashes(str_replace("\n", "", $printed_statement));
@@ -68,7 +72,8 @@ class PHPUnitScribe_NodeVisitor_Instrumentor extends PHPParser_NodeVisitorAbstra
             array(
                 'statement' => $printed_statement,
                 'statement_escaped' => $printed_statement_escaped,
-                'var' => $assigned_var_printed
+                'replacement_statement' => $assigned_var_printed,
+                'return_statement' => $return_printed
             )
         );
         $template_stmts = $interceptor_template->getStmts($properties[0]);

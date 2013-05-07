@@ -30,7 +30,6 @@ class PHPUnitScribe_Interceptor
             file_put_contents($temp_file, $code);
             include_once $temp_file;
         }
-
     }
 
     private static function instrument_file_once($file_name)
@@ -107,16 +106,20 @@ class PHPUnitScribe_Interceptor
         self::$editor = $editor;
     }
 
-    public static function intercept($statement)
+    public static function intercept($statement, $allow_assignment = true)
     {
+        echo "start interception\n";
+        // If interactivity is disabled we just keep stepping in
         if (!self::$enabled)
         {
-            return PHPUnitScribe_MockingChoice_Over;
+            echo "not enabled\n";
+            return array(PHPUnitScribe_MockingChoice_Into, null);
         }
 
         if (self::$editor)
         {
-            return self::$editor->prompt_for_mock($statement);
+            echo "has editor\n";
+            return self::$editor->prompt_for_mock($statement, $allow_assignment);
         }
         else
         {
@@ -127,9 +130,8 @@ class PHPUnitScribe_Interceptor
                     return $choice->get_result();
                 }
             }
-
         }
-
+        throw new Exception("The statement could not be intercepted: no choice found.  $statement");
     }
 
     public static function is_mockable_reference(PHPParser_Node $node)
@@ -170,8 +172,8 @@ class PHPUnitScribe_Interceptor
             $node instanceof PHPParser_Node_Expr_FuncCall ||
             $node instanceof PHPParser_Node_Expr_MethodCall ||
             $node instanceof PHPParser_Node_Expr_PropertyFetch ||
-            $node instanceof PHPParser_Node_Expr_StaticPropertyFetch ||
-            $node instanceof PHPParser_Node_Expr_Include;
+            $node instanceof PHPParser_Node_Expr_StaticPropertyFetch;
+            //$node instanceof PHPParser_Node_Expr_Include;
     }
 
     protected static function is_conditional(PHPParser_Node $node)

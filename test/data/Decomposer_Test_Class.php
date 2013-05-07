@@ -17,6 +17,7 @@ class Decomposer_Test_Class
     }
     public function do_a_thing()
     {
+        include_once "/Users/davidlcg/projs/PHPUnitScribe/src/PHPUnitScribe/MockingChoice.php";
         $this->protected_thing($this->generate_things());
         $this->{'p' . $this->funcName()}();
         $this->get_obj()->protected_thing(array('wow'));
