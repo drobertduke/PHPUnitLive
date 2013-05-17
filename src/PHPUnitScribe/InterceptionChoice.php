@@ -1,17 +1,17 @@
 <?php
 /**
- * Describes a mockable statement and the choice made
+ * Describes a interceptable statement and the choice made
  * (into, over, replace, or premature return)
  */
 
-define("PHPUnitScribe_MockingChoice_Into", "mocking_choice_into");
-define("PHPUnitScribe_MockingChoice_Over", "mocking_choice_over");
-define("PHPUnitScribe_MockingChoice_Replace", "mocking_choice_replace");
-define("PHPUnitScribe_MockingChoice_PrematureReturn", "mocking_choice_premature_return");
+define("PHPUnitScribe_InterceptionChoice_Into", "interception_choice_into");
+define("PHPUnitScribe_InterceptionChoice_Over", "interception_choice_over");
+define("PHPUnitScribe_InterceptionChoice_Replace", "interception_choice_replace");
+define("PHPUnitScribe_InterceptionChoice_PrematureReturn", "interception_choice_premature_return");
 
 define("PHPUnitScribe_Instrumented_Namespace", "phpunitscribe_instrumented_namespace");
 
-class PHPUnitScribe_MockingChoice
+class PHPUnitScribe_InterceptionChoice
 {
     protected $statement;
     protected $result;

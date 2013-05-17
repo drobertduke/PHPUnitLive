@@ -49,8 +49,8 @@ class PHPUnitScribe_TestEditor
         PHPUnitScribe_Interceptor::instrument_files_once($file_dependencies);
         PHPUnitScribe_Interceptor::instrument_classes_once($class_dependencies);
 
-        $choices = $this->test_builder->get_mocking_choices();
-        PHPUnitScribe_Interceptor::register_mocking_choices($choices);
+        $choices = $this->test_builder->get_interceptions();
+        PHPUnitScribe_Interceptor::setup_with_interceptions($choices);
     }
 
     protected function read()
@@ -124,44 +124,50 @@ class PHPUnitScribe_TestEditor
         }
     }
 
-    public function prompt_for_mock($printed_statement, $allow_assignment)
+    public function prompt_for_interception($printed_statement, $allow_assignment)
     {
         $printer = new PHPParser_PrettyPrinter_Default();
         echo "prompting\n";
-        echo "prompting to mock $printed_statement\n";
-        echo "(R)un with no mocking\n";
+        echo "prompting to intercept $printed_statement\n";
+        echo "Step (O)ver\n";
+        echo "Step i(N)to\n";
         if ($allow_assignment)
         {
-            echo "(M)ock this statement to return a value\n";
+            echo "(I)ntercept this statement to return a value\n";
         }
-        echo "(I)nteractively step into this statement\n";
-        echo "Return from function (p)rematurely\n";
-        $cmd = readline('MAKE YOUR CHOSE> ');
-        if ($cmd === 'r')
+        echo "(R)eturn from function prematurely\n";
+        $cmd = readline('>> ');
+        if ($cmd === 'o')
         {
-            return array(PHPUnitScribe_MockingChoice_Over, null);
+            return array(PHPUnitScribe_InterceptionChoice_Over, null);
         }
-        else if ($allow_assignment && $cmd === 'm')
+        else if ($allow_assignment && $cmd === 'i')
         {
-            $replacement_text_raw = readline("Replace with:");
-            $replacement_text = "return $replacement_text_raw";
-            if (substr($replacement_text, -1) != ';')
+            $replacement_text_raw = readline("Replace with: ");
+            $return_value = "return $replacement_text_raw";
+            if (substr($return_value, -1) != ';')
             {
-                $replacement_text .= ';';
+                $return_value .= ';';
             }
-            $replacement = eval($replacement_text);
+            $replacement = eval($return_value);
             echo "dumping replacement\n";
             var_dump($replacement);
-            return array(PHPUnitScribe_MockingChoice_Replace, $replacement);
+            return array(PHPUnitScribe_InterceptionChoice_Replace, $replacement);
         }
-        else if ($cmd === 'i')
+        else if ($cmd === 'n')
         {
-            return array(PHPUnitScribe_MockingChoice_Into, null);
+            return array(PHPUnitScribe_InterceptionChoice_Into, null);
         }
-        else if ($cmd === 'p')
+        else if ($cmd === 'r')
         {
-            $return_value = readline("Return value:");
-            return array(PHPUnitScribe_MockingChoice_PrematureReturn, $return_value);
+            $return_value_raw = readline("Return value:");
+            $return_value = "return $return_value_raw";
+            if (substr($return_value, -1) != ';')
+            {
+                $return_value .= ';';
+            }
+            $return = eval($return_value);
+            return array(PHPUnitScribe_InterceptionChoice_PrematureReturn, $return);
         }
     }
 

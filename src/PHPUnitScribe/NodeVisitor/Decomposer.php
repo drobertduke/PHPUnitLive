@@ -94,7 +94,7 @@ class PHPUnitScribe_NodeVisitor_Decomposer extends PHPParser_NodeVisitorAbstract
         }
         // If this node is mockable and we are in a nested context that requires
         // decomposition, perform the substitution
-        if (PHPUnitScribe_Interceptor::is_mockable_reference($node) &&
+        if (PHPUnitScribe_Interceptor::is_interceptable_reference($node) &&
             $this->in_decomposable_context())
         {
             $var_name = PHPUnitScribe_Interceptor::get_new_var_name();

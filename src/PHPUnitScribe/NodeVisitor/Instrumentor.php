@@ -100,12 +100,12 @@ class PHPUnitScribe_NodeVisitor_Instrumentor extends PHPParser_NodeVisitorAbstra
             var_dump($node);
         }
         if ($node instanceof PHPParser_Node_Expr_Assign &&
-            PHPUnitScribe_Interceptor::is_mockable_reference($node->expr))
+            PHPUnitScribe_Interceptor::is_interceptable_reference($node->expr))
         {
             $interception_functions = $this->get_interception_functions($node);
             return $interception_functions[0]->stmts;
         }
-        elseif (PHPUnitScribe_Interceptor::is_mockable_reference($node))
+        elseif (PHPUnitScribe_Interceptor::is_interceptable_reference($node))
         {
             $interception_functions = $this->get_interception_functions($node);
             return $interception_functions[1]->stmts;

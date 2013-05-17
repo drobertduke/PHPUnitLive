@@ -110,7 +110,7 @@ class PHPUnitScribe_TestBuilder
         return $this->instrumented_class_names;
     }
 
-    public function get_mocking_choices()
+    public function get_interceptions()
     {
         return $this->mocking_choices;
     }

@@ -5,7 +5,7 @@
  * This list is maintained across tests.
  * Maintains the global set of interceptors.  This set is
  * queried by the instrumented code to determine how to
- * handle mockable calls/references.
+ * handle interceptable calls/references.
  */
 
 class PHPUnitScribe_Interceptor
@@ -15,8 +15,8 @@ class PHPUnitScribe_Interceptor
     static protected $interactive_mode = false;
     /** @var PHPUnitScribe_Statements[] */
     static protected $files_instrumented = array();
-    /** @var PHPUnitScribe_MockingChoice[] */
-    static protected $mocking_choices = array();
+    /** @var PHPUnitScribe_InterceptionChoice[] */
+    static protected $interceptions = array();
     static protected $enabled = true;
     static protected $var_num = 0;
 
@@ -85,9 +85,10 @@ class PHPUnitScribe_Interceptor
         }
     }
 
-    public static function register_mocking_choices(array $choices)
+    public static function setup_with_interceptions(array $choices)
     {
-        self::$mocking_choices = $choices;
+        PHPUnitScribe_Autoloader::register_test_autoloader();
+        self::$interceptions = $choices;
         echo "registering choices\n";
     }
 
@@ -113,28 +114,28 @@ class PHPUnitScribe_Interceptor
         if (!self::$enabled)
         {
             echo "not enabled\n";
-            return array(PHPUnitScribe_MockingChoice_Into, null);
+            return array(PHPUnitScribe_InterceptionChoice_Into, null);
         }
 
         if (self::$editor)
         {
             echo "has editor\n";
-            return self::$editor->prompt_for_mock($statement, $allow_assignment);
+            return self::$editor->prompt_for_interception($statement, $allow_assignment);
         }
         else
         {
-            foreach (self::$mocking_choices as $choice)
+            foreach (self::$interceptions as $interception)
             {
-                if ($choice->matches($statement))
+                if ($interception->matches($statement))
                 {
-                    return $choice->get_result();
+                    return $interception->get_result();
                 }
             }
         }
         throw new Exception("The statement could not be intercepted: no choice found.  $statement");
     }
 
-    public static function is_mockable_reference(PHPParser_Node $node)
+    public static function is_interceptable_reference(PHPParser_Node $node)
     {
         return
             self::is_external_reference($node) ||
