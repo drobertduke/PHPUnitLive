@@ -135,6 +135,10 @@ class PHPUnitScribe_TestEditor
         {
             echo "(I)ntercept this statement to return a value\n";
         }
+        else
+        {
+            echo "(S)uppress this statement\n";
+        }
         echo "(R)eturn from function prematurely\n";
         $cmd = readline('>> ');
         if ($cmd === 'o')
@@ -152,7 +156,20 @@ class PHPUnitScribe_TestEditor
             $replacement = eval($return_value);
             echo "dumping replacement\n";
             var_dump($replacement);
+            $parsed_statement = $this->parser->parse("<?php $printed_statement");
+
+            if (PHPUnitScribe_Interceptor::is_replaceable($parsed_statement))
+            {
+                $original = $parsed_statement->expr;
+            }
+            $choice = new PHPUnitScribe_InterceptionChoice($original, $replacement);
+            PHPUnitScribe_Interceptor::add_interception($choice);
             return array(PHPUnitScribe_InterceptionChoice_Replace, $replacement);
+        }
+        else if ($cmd === 's')
+        {
+            throw new Exception("unimplemented");
+
         }
         else if ($cmd === 'n')
         {

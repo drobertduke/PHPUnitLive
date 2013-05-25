@@ -7,17 +7,24 @@ class PHPUnitScribe_Template_Interceptor
 
     public function assignment_interceptor()
     {
-        list($PHPUnitScribe_choice, $PHPUnitScribe_replacement) = \PHPUnitScribe_Interceptor::intercept('__statement_escaped__', true);
+        $PHPUnitScribe_exprs_to_resolve = \PHPUnitScribe_Interceptor::get_unresolved_exprs('__statement_escaped__');
+        $PHPUnitScribe_resolved_exprs = array();
+        foreach ($PHPUnitScribe_exprs_to_resolve as $PHPUnitScribe_expr_to_resolve)
+        {
+            $PHPUnitScribe_resolved_exprs[] = eval($PHPUnitScribe_expr_to_resolve);
+        }
+        $PHPUnitScribe_statement = \PHPUnitScribe_Interceptor::replace_unresolved_exprs('__statement_escaped__', $PHPUnitScribe_resolved_exprs);
+        list($PHPUnitScribe_choice, $PHPUnitScribe_replacement) = \PHPUnitScribe_Interceptor::intercept($PHPUnitScribe_statement, true);
         if ($PHPUnitScribe_choice === PHPUnitScribe_InterceptionChoice_Into) {
-            __statement__;
+            eval($PHPUnitScribe_statement . ';');
         } elseif ($PHPUnitScribe_choice === PHPUnitScribe_InterceptionChoice_Over) {
             \PHPUnitScribe_Interceptor::disable();
-            __statement__;
+            eval($PHPUnitScribe_statement . ';');
             \PHPUnitScribe_Interceptor::enable();
         } elseif ($PHPUnitScribe_choice === PHPUnitScribe_InterceptionChoice_Replace) {
-            __replacement_statement__;
+            __original_var__ = $PHPUnitScribe_replacement;
         } elseif ($PHPUnitScribe_choice === PHPUnitScribe_InterceptionChoice_PrematureReturn) {
-            __return_statement__;
+            return $PHPUnitScribe_replacement;
         } else {
             throw new Exception('no choice made');
         }
@@ -25,15 +32,24 @@ class PHPUnitScribe_Template_Interceptor
 
     public function non_assignment_interceptor()
     {
-        list($PHPUnitScribe_choice, $PHPUnitScribe_garbage) = \PHPUnitScribe_Interceptor::intercept('__statement_escaped__', false);
+        $PHPUnitScribe_exprs_to_resolve = \PHPUnitScribe_Interceptor::get_unresolved_exprs('__statement_escaped__');
+        $PHPUnitScribe_resolved_exprs = array();
+        foreach ($PHPUnitScribe_exprs_to_resolve as $PHPUnitScribe_expr_to_resolve)
+        {
+            $PHPUnitScribe_resolved_exprs[] = eval($PHPUnitScribe_expr_to_resolve);
+        }
+        $PHPUnitScribe_statement = \PHPUnitScribe_Interceptor::replace_unresolved_exprs('__statement_escaped__', $PHPUnitScribe_resolved_exprs);
+        list($PHPUnitScribe_choice, $PHPUnitScribe_replacement) = \PHPUnitScribe_Interceptor::intercept('__statement_escaped__', false);
         if ($PHPUnitScribe_choice === PHPUnitScribe_InterceptionChoice_Into) {
-            __statement__;
+            eval($PHPUnitScribe_statement . ';');
         } elseif ($PHPUnitScribe_choice === PHPUnitScribe_InterceptionChoice_Over) {
             \PHPUnitScribe_Interceptor::disable();
-            __statement__;
+            eval($PHPUnitScribe_statement . ';');
             \PHPUnitScribe_Interceptor::enable();
         } elseif ($PHPUnitScribe_choice === PHPUnitScribe_InterceptionChoice_PrematureReturn) {
-            __return_statement__;
+            return $PHPUnitScribe_replacement;
+        } elseif ($PHPUnitScribe_choice === PHPUnitScribe_InterceptionChoice_Suppress) {
+            // No-op
         } else {
             throw new Exception('no choice made');
         }

@@ -40,6 +40,8 @@ class Decomposer_Test extends PHPUnit_Framework_TestCase
         $class_name = "\\phpunitscribe_instrumented_namespace\\Decomposer_Test_Class";
         $obj = new $class_name();
         $obj->do_a_thing();
+        echo "dumping interceptions\n";
+        var_dump(PHPUnitScribe_Interceptor::get_interceptions());
     }
 
     public function test_simple()

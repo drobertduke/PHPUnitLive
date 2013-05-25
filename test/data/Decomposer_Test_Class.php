@@ -1,6 +1,12 @@
 <?php
 /**
  */
+
+function outside_function($arg1)
+{
+    echo $arg1;
+}
+
 class Decomposer_Test_Class
 {
     protected function protected_thing($things)
@@ -36,6 +42,8 @@ class Decomposer_Test_Class
         }
         $this->nothing($r);
         list($a, $b) = $this->return_two_things();
+        $func_to_call = 'outside_function';
+        $func_to_call('hi');
     }
 
     protected function return_a()

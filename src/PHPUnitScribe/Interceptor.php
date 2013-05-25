@@ -248,6 +248,7 @@ class PHPUnitScribe_Interceptor
         {
             $inner_nodes = $node->items;
         }
+        // wtf is this
         elseif (self::is_array_node($node))
         {
             $inner_nodes = array($node->dim);
@@ -277,6 +278,7 @@ class PHPUnitScribe_Interceptor
         {
             $node->items = $replacements;
         }
+        // wtf is this
         elseif (self::is_array_node($node))
         {
             $node->dim = $replacements[0];
@@ -294,4 +296,93 @@ class PHPUnitScribe_Interceptor
         return "PHPUnitScribe_TempVar" . self::$var_num;
     }
 
+    public static function add_interception(PHPUnitScribe_InterceptionChoice $choice)
+    {
+        self::$interceptions[] = $choice;
+    }
+
+    public static function get_interceptions()
+    {
+        return self::$interceptions;
+    }
+
+    public static function is_replaceable($stmt)
+    {
+        return $stmt instanceof PHPParser_Node_Stmt_Return || $stmt instanceof PHPParser_Node_Expr_Assign;
+    }
+
+    private static function parse_stmt_string($stmt_string)
+    {
+        $parser = new PHPParser_Parser(new PHPParser_Lexer());
+        $stmts = $parser->parse("<?php $stmt_string");
+        if (count($stmts) !== 1)
+        {
+            throw new Exception("Expected 1 statement");
+        }
+        $stmt = $stmts[0];
+        if (!self::is_interceptable_reference($stmt))
+        {
+            throw new Exception("Statement $stmt_string was not interceptable\n");
+        }
+        return $stmt;
+    }
+
+    public static function replace_unresolved_exprs($stmt_string, $resolved_exprs)
+    {
+        $stmt = self::parse_stmt_string($stmt_string);
+        $unresolved_exprs = self::find_all_exprs_in_node($stmt);
+        $resolved_expr_idx = 0;
+        foreach ($unresolved_exprs as $part_name => $unresolved_expr)
+        {
+            if (count($resolved_exprs) <= $resolved_expr_idx)
+            {
+                throw new Exception("Resolved exprs can't be matched with unresolved exprs\n");
+            }
+            $stmt->$part_name = $resolved_exprs[$resolved_expr_idx];
+        }
+        $printer = new PHPParser_PrettyPrinter_Default();
+        return $printer->prettyPrint(array($stmt));
+    }
+
+    protected static function find_all_exprs_in_node($node)
+    {
+        $exprs = array();
+        if ($node instanceof PHPParser_Node_Expr_New)
+        {
+            self::add_if_expr($node, 'class', $exprs);
+        }
+        elseif ($node instanceof PHPParser_Node_Expr_StaticCall)
+        {
+            self::add_if_expr($node, 'class', $exprs);
+            self::add_if_expr($node, 'name', $exprs);
+        }
+        elseif ($node instanceof PHPParser_Node_Expr_FuncCall)
+        {
+            self::add_if_expr($node, 'name', $exprs);
+        }
+        elseif ($node instanceof PHPParser_Node_Expr_MethodCall)
+        {
+            self::add_if_expr($node, 'name' , $exprs);
+            self::add_if_expr($node, 'var', $exprs);
+        }
+        elseif ($node instanceof PHPParser_Node_Expr_PropertyFetch)
+        {
+            self::add_if_expr($node, 'name', $exprs);
+            self::add_if_expr($node, 'var', $exprs);
+        }
+        elseif ($node instanceof PHPParser_Node_Expr_StaticPropertyFetch)
+        {
+            self::add_if_expr($node, 'name', $exprs);
+            self::add_if_expr($node, 'class', $exprs);
+        }
+        return $exprs;
+    }
+
+    protected static function add_if_expr(PHPParser_Node $node, $property, &$exprs)
+    {
+        if ($node->$property instanceof PHPParser_Node_Expr)
+        {
+            $exprs[$property] = $node;
+        }
+    }
 }
