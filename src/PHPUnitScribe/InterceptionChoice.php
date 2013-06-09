@@ -10,7 +10,7 @@ define("PHPUnitScribe_InterceptionChoice_Replace", "interception_choice_replace"
 define("PHPUnitScribe_InterceptionChoice_Suppress", "interception_choice_suppress");
 define("PHPUnitScribe_InterceptionChoice_PrematureReturn", "interception_choice_premature_return");
 
-define("PHPUnitScribe_Instrumented_Namespace", "phpunitscribe_instrumented_namespace");
+//define("PHPUnitScribe_Instrumented_Namespace", "phpunitscribe_instrumented_namespace");
 
 class PHPUnitScribe_InterceptionChoice
 {

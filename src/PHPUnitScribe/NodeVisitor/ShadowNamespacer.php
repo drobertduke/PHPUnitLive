@@ -20,6 +20,7 @@ class PHPUnitScribe_NodeVisitor_ShadowNamespacer extends PHPParser_NodeVisitorAb
 
     public function leaveNode(PHPParser_Node $node)
     {
+        /* Do we need namespaces if the autoloader is going to do all the work?
         $this->depth_count--;
         if ($this->depth_count == 0 && !$this->added_namespace)
         {
@@ -29,6 +30,7 @@ class PHPUnitScribe_NodeVisitor_ShadowNamespacer extends PHPParser_NodeVisitorAb
             return $namespace_stmt;
         }
         return $node;
+        */
         /*
         if ($node instanceof PHPParser_Node_Stmt_Class)
         {

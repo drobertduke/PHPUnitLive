@@ -19,7 +19,6 @@ class Decomposer_Test_Class
     protected function return_two_things()
     {
         return array(0, 1);
-
     }
     public function do_a_thing()
     {

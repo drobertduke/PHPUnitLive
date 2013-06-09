@@ -37,8 +37,9 @@ class Decomposer_Test extends PHPUnit_Framework_TestCase
         $editor = new PHPUnitScribe_TestEditor($temp_file, 'do_a_thing');
         PHPUnitScribe_Interceptor::register_editor($editor);
 
-        $class_name = "\\phpunitscribe_instrumented_namespace\\Decomposer_Test_Class";
-        $obj = new $class_name();
+        //$class_name = "\\phpunitscribe_instrumented_namespace\\Decomposer_Test_Class";
+        //$obj = new $class_name();
+        $obj = new Decomposer_Test_Class();
         $obj->do_a_thing();
         echo "dumping interceptions\n";
         var_dump(PHPUnitScribe_Interceptor::get_interceptions());
