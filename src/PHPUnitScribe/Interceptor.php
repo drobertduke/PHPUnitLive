@@ -107,7 +107,7 @@ class PHPUnitScribe_Interceptor
         self::$editor = $editor;
     }
 
-    public static function intercept($statement, $allow_assignment = true)
+    public static function intercept($statement, $object_types, $allow_assignment = true, $statement_string)
     {
         echo "start interception\n";
         // If interactivity is disabled we just keep stepping in
@@ -120,13 +120,13 @@ class PHPUnitScribe_Interceptor
         if (self::$editor)
         {
             echo "has editor\n";
-            return self::$editor->prompt_for_interception($statement, $allow_assignment);
+            return self::$editor->prompt_for_interception($statement, $object_types, $allow_assignment, $statement_string);
         }
         else
         {
             foreach (self::$interceptions as $interception)
             {
-                if ($interception->matches($statement))
+                if ($interception->matches($statement, $object_types))
                 {
                     return $interception->get_result();
                 }
@@ -139,6 +139,7 @@ class PHPUnitScribe_Interceptor
     {
         return
             self::is_external_reference($node) ||
+            ($node instanceof PHPParser_Node_Expr_Assign && self::is_external_reference($node->expr)) ||
             $node instanceof PHPParser_Node_Expr_Exit ||
             $node instanceof PHPParser_Node_Expr_ShellExec;
     }
@@ -327,62 +328,140 @@ class PHPUnitScribe_Interceptor
         return $stmt;
     }
 
+    /**
+     * @param $stmt_string
+     * @param $resolved_exprs
+     * @return string
+     * @throws Exception
+     */
     public static function replace_unresolved_exprs($stmt_string, $resolved_exprs)
     {
         $stmt = self::parse_stmt_string($stmt_string);
-        $unresolved_exprs = self::find_all_exprs_in_node($stmt);
-        $resolved_expr_idx = 0;
+        echo "original stmt\n";
+        ini_set('xdebug.var_display_max_depth', -1);
+        var_dump($stmt);
+        $unresolved_exprs = self::get_unresolved_exprs_from_node($stmt);
+        $printer = new PHPParser_PrettyPrinter_Default();
+        $unique_string = 'Xf824H3jeiN91_f-nQwiA4TbbBdkWeYz9sPa';
+        echo "resolved exprs\n";
+        var_dump($resolved_exprs);
+        $object_types = array();
         foreach ($unresolved_exprs as $part_name => $unresolved_expr)
         {
-            if (count($resolved_exprs) <= $resolved_expr_idx)
+            if (!array_key_exists($part_name, $resolved_exprs))
             {
+                echo "resolved expr idx $part_name\n";
+                var_dump($unresolved_exprs);
+                var_dump($resolved_exprs);
                 throw new Exception("Resolved exprs can't be matched with unresolved exprs\n");
             }
-            $stmt->$part_name = $resolved_exprs[$resolved_expr_idx];
+            if (is_object($resolved_exprs[$part_name]))
+            {
+                $object_types[$part_name] = get_class($resolved_exprs[$part_name]);
+            }
+            else if (is_string($resolved_exprs[$part_name]))
+            {
+                // Replace the statement's part with a Node_Name containing a unique string
+                $stmt->$part_name = new PHPParser_Node_Name($unique_string);
+                // Render the statement
+                $rendered_with_unique_string = $printer->prettyPrint(array($stmt));
+                // Replace the unique string in the rendered statement with the resolved expr
+                $string_replaced = str_replace($unique_string, $resolved_exprs[$part_name], $rendered_with_unique_string);
+                // Parse the result and replace $stmt
+                $stmt = self::parse_stmt_string($string_replaced);
+            }
+            else
+            {
+                throw new Exception("What did it resolve to?");
+            }
         }
-        $printer = new PHPParser_PrettyPrinter_Default();
-        return $printer->prettyPrint(array($stmt));
+        echo "final stmt\n";
+        var_dump($stmt);
+        return array($object_types, $printer->prettyPrint(array($stmt)));
     }
 
-    protected static function find_all_exprs_in_node($node)
+    /**
+     * @param $node
+     * @return array
+     */
+    public static function find_all_components_of_node($node)
     {
-        $exprs = array();
+        $components = array();
         if ($node instanceof PHPParser_Node_Expr_New)
         {
-            self::add_if_expr($node, 'class', $exprs);
+            $components['class'] = $node->class;
         }
         elseif ($node instanceof PHPParser_Node_Expr_StaticCall)
         {
-            self::add_if_expr($node, 'class', $exprs);
-            self::add_if_expr($node, 'name', $exprs);
+            $components['class'] = $node->class;
+            $components['name'] = $node->name;
         }
         elseif ($node instanceof PHPParser_Node_Expr_FuncCall)
         {
-            self::add_if_expr($node, 'name', $exprs);
+            $components['name'] = $node->name;
         }
         elseif ($node instanceof PHPParser_Node_Expr_MethodCall)
         {
-            self::add_if_expr($node, 'name' , $exprs);
-            self::add_if_expr($node, 'var', $exprs);
+            $components['name'] = $node->name;
+            $components['var'] = $node->var;
         }
         elseif ($node instanceof PHPParser_Node_Expr_PropertyFetch)
         {
-            self::add_if_expr($node, 'name', $exprs);
-            self::add_if_expr($node, 'var', $exprs);
+            $components['name'] = $node->name;
+            $components['var'] = $node->var;
         }
         elseif ($node instanceof PHPParser_Node_Expr_StaticPropertyFetch)
         {
-            self::add_if_expr($node, 'name', $exprs);
-            self::add_if_expr($node, 'class', $exprs);
+            $components['class'] = $node->class;
+            $components['name'] = $node->name;
+        }
+        return $components;
+    }
+
+    /**
+     * @param string $stmt_string
+     * @return PHPParser_Node_Expr[]
+     */
+    public static function get_unresolved_exprs_from_string($stmt_string)
+    {
+        $stmt = self::parse_stmt_string($stmt_string);
+        $unresolved_exprs = self::get_unresolved_exprs_from_node($stmt);
+        $unresolved_exprs_printed = array();
+        foreach ($unresolved_exprs as $part_name => $unresolved_expr)
+        {
+            $unresolved_exprs_printed[$part_name] = self::print_stmt($unresolved_expr);
+        }
+        echo "got unresolved exprs:\n";
+        var_dump($unresolved_exprs_printed);
+        return $unresolved_exprs_printed;
+    }
+
+    private static function print_stmt(PHPParser_Node $node)
+    {
+        $printer = new PHPParser_PrettyPrinter_Default();
+        return $printer->prettyPrint(array($node));
+    }
+
+    /**
+     * @param PHPParser_Node $node
+     * @return PHPParser_Node_Expr[]
+     */
+    private static function get_unresolved_exprs_from_node($node)
+    {
+        $exprs = array();
+        $components = self::find_all_components_of_node($node);
+        foreach ($components as $property_name => $component)
+        {
+            if ($node->$property_name instanceof PHPParser_Node_Expr)
+            {
+                if (!($node->$property_name instanceof PHPParser_Node_Expr_Variable &&
+                    $node->$property_name->name == 'this'))
+                {
+                    $exprs[$property_name] = $node->$property_name;
+                }
+            }
         }
         return $exprs;
     }
-
-    protected static function add_if_expr(PHPParser_Node $node, $property, &$exprs)
-    {
-        if ($node->$property instanceof PHPParser_Node_Expr)
-        {
-            $exprs[$property] = $node;
-        }
-    }
 }
+

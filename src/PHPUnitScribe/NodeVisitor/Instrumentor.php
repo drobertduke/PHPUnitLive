@@ -43,21 +43,24 @@ class PHPUnitScribe_NodeVisitor_Instrumentor extends PHPParser_NodeVisitorAbstra
     /**
      * @param PHPParser_Node $node
      * @return PHPParser_Node[]
+     * @throws Exception
      */
     protected function get_interception_functions($node)
     {
         $printer = new PHPParser_PrettyPrinter_Default();
-        $original_var_printed = 'unused_var_placeholder';
+        $original_var_printed = '$PHPUnitScribe_unused_var_placeholder';
         if (PHPUnitScribe_Interceptor::is_replaceable($node))
         {
             if ($node instanceof PHPParser_Node_Expr_Assign)
             {
                 $replacement = new PHPParser_Node_Expr_Variable('PHPUnitScribe_replacement');
-                $original_var_printed = $printer->prettyPrint($node->var);
+                $original_var_printed = $printer->prettyPrint(array($node->var));
+                // Strip off the ;
+                $original_var_printed = substr($original_var_printed, 0, -1);
             }
             elseif ($node instanceof PHPParser_Node_Stmt_Return)
             {
-                // ?
+                throw new Exception("Not implemented");
             }
             else
             {
@@ -75,9 +78,12 @@ class PHPUnitScribe_NodeVisitor_Instrumentor extends PHPParser_NodeVisitorAbstra
             array(
                 'statement' => $printed_statement,
                 'statement_escaped' => $printed_statement_escaped,
-                'original_var' => $original_var_printed,
+                'replacement_statement' => "$original_var_printed = \$PHPUnitScribe_replacement",
+                //'original_var' => $original_var_printed,
             )
         );
+        echo "HI!\n";
+        var_dump($properties);
         $template_stmts = $interceptor_template->getStmts($properties[0]);
         $interceptor_functions = $template_stmts[0]->stmts;
         return $interceptor_functions;

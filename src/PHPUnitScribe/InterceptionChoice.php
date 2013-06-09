@@ -25,49 +25,52 @@ class PHPUnitScribe_InterceptionChoice
     }
 
     /**
-     * @param PHPParser_Node $statement
+     * @param $candidate_statement
+     * @param $object_types
      * @return bool
+     * @throws Exception
      * Has to implement equality for any PHPParser_Node_Expr
      */
-    public function matches($statement)
+    public function matches($candidate_statement, $object_types)
     {
-        if (!PHPUnitScribe_Interceptor::is_interceptable_reference($statement))
+        // What do we do with object types?
+        if (!PHPUnitScribe_Interceptor::is_interceptable_reference($candidate_statement))
         {
             throw new Exception("Original statement should've been an interceptable_reference\n" .
-                "Instead it was " . get_class($statement));
+                "Instead it was " . get_class($candidate_statement));
         }
-        if (get_class($statement) != get_class($this->statement))
+        if (get_class($candidate_statement) != get_class($this->statement))
         {
             return false;
         }
-        if ($statement instanceof PHPParser_Node_Expr_New)
+        $candidate_components = PHPUnitScribe_Interceptor::find_all_components_of_node($candidate_statement);
+        foreach ($candidate_components as $property_name => $candidate_component)
         {
-            if ($statement->class instanceof PHPParser_Node_Name &&
-                $this->statement->class instanceof PHPParser_Node_Name)
+            if ($candidate_component->$property_name instanceof PHPParser_Node_Name)
             {
-                return $statement->class->parts === $this->statement->class->parts;
+                if ($candidate_statement->$property_name->parts != $this->statement->$property_name->parts)
+                {
+                    return false;
+                }
             }
-            elseif ($statement->class instanceof PHPParser_Node_Expr)
+            elseif (is_string($candidate_component->$property_name))
             {
+                if ($candidate_statement->$property_name != $this->statement->$property_name)
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                throw new Exception("Component wasn't a string or Node_Name" . var_export($candidate_statement, true));
+            }
+        }
+        return true;
+    }
 
-            }
-            throw new Exception("Trying to match an Expr_New without a Node_Name class");
-        }
-        if ($statement instanceof PHPParser_Node_Expr_StaticCall)
-        {
-            if ($statement->class instanceof PHPParser_Node_Name &&
-                $this->statement->class instanceof PHPParser_Node_Name &&
-                is_string($statement->name) && is_string($this->statement->name))
-            {
-                return $statement->class->parts == $this->statement->class->parts &&
-                    $statement->name === $this->statement->name;
-            }
-            throw new Exception("Trying to match a static call without a node_name class and string name");
-        }
-        if ($statement instanceof PHPParser_Node_Expr_FuncCall)
-        {
-            if ($statement->name instanceof PHPParser_Node_Name)
-        }
+    private function check_equality($node1, $node2)
+    {
+
     }
 
     public function get_result()

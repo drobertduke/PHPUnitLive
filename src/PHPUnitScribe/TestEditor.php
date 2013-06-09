@@ -124,11 +124,19 @@ class PHPUnitScribe_TestEditor
         }
     }
 
-    public function prompt_for_interception($printed_statement, $allow_assignment)
+    public function prompt_for_interception($statement, $object_types, $allow_assignment, $statement_string)
     {
-        $printer = new PHPParser_PrettyPrinter_Default();
+        $object_type_strings = array();
+        foreach($object_types as $part_name => $class_name)
+        {
+            $object_type_strings[] = "$part_name of class $class_name";
+        }
         echo "prompting\n";
-        echo "prompting to intercept $printed_statement\n";
+        echo "prompting to intercept $statement_string\n";
+        if (count($object_types) > 0)
+        {
+            echo "with " . implode(' and ', $object_type_strings);
+        }
         echo "Step (O)ver\n";
         echo "Step i(N)to\n";
         if ($allow_assignment)
@@ -154,13 +162,15 @@ class PHPUnitScribe_TestEditor
                 $return_value .= ';';
             }
             $replacement = eval($return_value);
-            echo "dumping replacement\n";
-            var_dump($replacement);
-            $parsed_statement = $this->parser->parse("<?php $printed_statement");
-
+            $parsed_statements = $this->parser->parse("<?php $statement_string");
+            $parsed_statement = $parsed_statements[0];
             if (PHPUnitScribe_Interceptor::is_replaceable($parsed_statement))
             {
                 $original = $parsed_statement->expr;
+            }
+            else
+            {
+                throw Exception("not sure what to do here");
             }
             $choice = new PHPUnitScribe_InterceptionChoice($original, $replacement);
             PHPUnitScribe_Interceptor::add_interception($choice);
